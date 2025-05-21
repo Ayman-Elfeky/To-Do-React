@@ -4,14 +4,15 @@
     padding: 2rem;
     background: white;
     border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 h1 {
-    color: #2c3e50;
     text-align: center;
+    color: #2c3e50;
     margin-bottom: 2rem;
     font-size: 2.5rem;
+    font-weight: 700;
 }
 
 .todo-form {
@@ -34,7 +35,7 @@ h1 {
     border-color: #3498db;
 }
 
-.todo-button {
+.todo-add-btn {
     padding: 0.8rem 1.5rem;
     background-color: #3498db;
     color: white;
@@ -45,8 +46,27 @@ h1 {
     transition: background-color 0.3s ease;
 }
 
-.todo-button:hover {
+.todo-add-btn:hover:not(:disabled) {
     background-color: #2980b9;
+}
+
+.todo-add-btn:disabled {
+    background-color: #bdc3c7;
+    cursor: not-allowed;
+}
+
+.todo-stats {
+    display: flex;
+    justify-content: space-around;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 5px;
+    margin-bottom: 2rem;
+}
+
+.todo-stats span {
+    color: #2c3e50;
+    font-size: 0.9rem;
 }
 
 .todo-list {
@@ -55,9 +75,24 @@ h1 {
     gap: 1rem;
 }
 
-.no-tasks {
+.todo-list > * {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.no-todos {
     text-align: center;
-    color: #7f8c8d;
+    color: #95a5a6;
     font-style: italic;
-    padding: 1rem;
+    padding: 2rem;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
