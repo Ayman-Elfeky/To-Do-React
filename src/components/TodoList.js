@@ -1,80 +1,106 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import TodoItem from './TodoItem';
 import '../styles/TodoList.css';
 
 const TodoList = () => {
-    const [tasks, setTasks] = useState([]);
-    const [newTask, setNewTask] = useState('');
+    const [todos, setTodos] = useState(() => {
+        const savedTodos = localStorage.getItem('todos');
+        return savedTodos ? JSON.parse(savedTodos) : [];
+    });
+    const [inputText, setInputText] = useState('');
 
-    // Load tasks from localStorage on component mount
     useEffect(() => {
-        const savedTasks = localStorage.getItem('tasks');
-        if (savedTasks) {
-            setTasks(JSON.parse(savedTasks));
+        localStorage.setItem('todos', JSON.stringify(todos));
+    }, [todos]);
+
+    const handleAddTodo = useCallback((e) => {
+        e.preventDefault();
+        if (inputText.trim()) {
+            setTodos(prev => [
+                ...prev,
+                {
+                    id: Date.now(),
+                    text: inputText.trim(),
+                    completed: false
+                }
+            ]);
+            setInputText('');
+        }
+    }, [inputText]);
+
+    const handleToggle = useCallback((id) => {
+        setTodos(prev => prev.map(todo =>
+            todo.id === id ? { ...todo, completed: !todo.completed } : todo
+        ));
+    }, []);
+
+    const handleDelete = useCallback((id) => {
+        setTodos(prev => prev.filter(todo => todo.id !== id));
+    }, []);
+
+    const handleEdit = useCallback((id, newText) => {
+        if (newText.trim()) {
+            setTodos(prev => prev.map(todo =>
+                todo.id === id ? { ...todo, text: newText.trim() } : todo
+            ));
         }
     }, []);
 
-    // Save tasks to localStorage whenever they change
-    useEffect(() => {
-        localStorage.setItem('tasks', JSON.stringify(tasks));
-    }, [tasks]);
+    const sortedTodos = useMemo(() => {
+        return [...todos].sort((a, b) => {
+            // Sort by completion status and then by creation time
+            if (a.completed === b.completed) {
+                return b.id - a.id; // Newer todos first
+            }
+            return a.completed ? 1 : -1; // Incomplete todos first
+        });
+    }, [todos]);
 
-    const addTask = (e) => {
-        e.preventDefault();
-        if (!newTask.trim()) return;
-
-        const task = {
-            id: Date.now(),
-            text: newTask.trim(),
-            completed: false
-        };
-
-        setTasks([...tasks, task]);
-        setNewTask('');
-    };
-
-    const toggleTask = (taskId) => {
-        setTasks(tasks.map(task =>
-            task.id === taskId ? { ...task, completed: !task.completed } : task
-        ));
-    };
-
-    const deleteTask = (taskId) => {
-        setTasks(tasks.filter(task => task.id !== taskId));
-    };
-
-    const editTask = (taskId, newText) => {
-        setTasks(tasks.map(task =>
-            task.id === taskId ? { ...task, text: newText } : task
-        ));
-    };
+    const stats = useMemo(() => ({
+        total: todos.length,
+        completed: todos.filter(todo => todo.completed).length,
+        remaining: todos.filter(todo => !todo.completed).length
+    }), [todos]);
 
     return (
         <div className="todo-container">
             <h1>Todo List</h1>
-            <form onSubmit={addTask} className="todo-form">
+
+            <form className="todo-form" onSubmit={handleAddTodo}>
                 <input
                     type="text"
-                    value={newTask}
-                    onChange={(e) => setNewTask(e.target.value)}
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
                     placeholder="Add a new task..."
                     className="todo-input"
                 />
-                <button type="submit" className="todo-button">Add Task</button>
+                <button
+                    type="submit"
+                    className="todo-add-btn"
+                    disabled={!inputText.trim()}
+                >
+                    Add
+                </button>
             </form>
+
+            <div className="todo-stats">
+                <span>Total: {stats.total}</span>
+                <span>Completed: {stats.completed}</span>
+                <span>Remaining: {stats.remaining}</span>
+            </div>
+
             <div className="todo-list">
-                {tasks.length === 0 ? (
-                    <p className="no-tasks">No tasks yet. Add one above!</p>
-                ) : (
-                    tasks.map(task => (
-                        <TodoItem
-                            key={task.id}
-                            task={task}
-                            onToggle={toggleTask}
-                            onDelete={deleteTask}
-                            onEdit={editTask}
-                        />
-                    ))
+                {sortedTodos.map(todo => (
+                    <TodoItem
+                        key={todo.id}
+                        todo={todo}
+                        onToggle={handleToggle}
+                        onDelete={handleDelete}
+                        onEdit={handleEdit}
+                    />
+                ))}
+                {!todos.length && (
+                    <p className="no-todos">No tasks yet. Add one above!</p>
                 )}
             </div>
         </div>

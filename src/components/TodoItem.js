@@ -1,61 +1,57 @@
-import React, { useState } from 'react';
+import React, { memo, useState } from 'react';
 import '../styles/TodoItem.css';
 
-const TodoItem = ({ task, onToggle, onDelete, onEdit }) => {
+const TodoItem = memo(({ todo, onToggle, onDelete, onEdit }) => {
     const [isEditing, setIsEditing] = useState(false);
-    const [editText, setEditText] = useState(task.text);
+    const [editText, setEditText] = useState(todo.text);
 
     const handleEdit = () => {
-        if (isEditing) {
-            onEdit(task.id, editText.trim());
+        if (isEditing && editText.trim()) {
+            onEdit(todo.id, editText);
         }
         setIsEditing(!isEditing);
     };
 
     const handleKeyPress = (e) => {
-        if (e.key === 'Enter') {
+        if (e.key === 'Enter' && editText.trim()) {
             handleEdit();
         }
     };
 
     return (
-        <div className={`todo-item ${task.completed ? 'completed' : ''}`}>
+        <div className={`todo-item ${todo.completed ? 'completed' : ''}`}>
             <input
                 type="checkbox"
-                checked={task.completed}
-                onChange={() => onToggle(task.id)}
                 className="todo-checkbox"
+                checked={todo.completed}
+                onChange={() => onToggle(todo.id)}
             />
-
             {isEditing ? (
                 <input
                     type="text"
+                    className="todo-edit-input"
                     value={editText}
                     onChange={(e) => setEditText(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    className="todo-edit-input"
                     autoFocus
                 />
             ) : (
-                <span className="todo-text">{task.text}</span>
+                <span className="todo-text">{todo.text}</span>
             )}
-
             <div className="todo-actions">
                 <button
-                    onClick={handleEdit}
                     className="todo-edit-btn"
+                    onClick={handleEdit}
+                    disabled={isEditing && !editText.trim()}
                 >
                     {isEditing ? 'Save' : 'Edit'}
                 </button>
-                <button
-                    onClick={() => onDelete(task.id)}
-                    className="todo-delete-btn"
-                >
+                <button className="todo-delete-btn" onClick={() => onDelete(todo.id)}>
                     Delete
                 </button>
             </div>
         </div>
     );
-};
+});
 
 export default TodoItem;
